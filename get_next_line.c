@@ -6,7 +6,7 @@
 /*   By: mahmad-j <mahmad-j@student.42kl.edu.my>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 15:26:08 by mahmad-j          #+#    #+#             */
-/*   Updated: 2021/06/02 23:13:22 by mahmad-j         ###   ########.fr       */
+/*   Updated: 2021/06/02 23:56:48 by mahmad-j         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,72 +78,56 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (ret);
 }
 
-void	get_next_line_2(ssize_t n, char **line, char **statline, char **tmp)
+ssize_t	get_next_line_2(ssize_t n, char **line, char **statline, char **tmp)
 {
+	ssize_t	ret;
+
 	if (n == 0)
 	{
 		*line = ft_strdup(*statline);
 		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
+		ret = 0;
 	}
-	else
+	else if (n > 0)
 	{
 		*line = ft_substr(*statline, 0,
 				(ft_strchr(*statline, '\n') - *statline));
 		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
+		ret = 1;
 	}
+	else
+		return (ret = -1);
 	ft_memdel((void **)statline);
 	*statline = *tmp;
-}
-
-void	init(ssize_t *n, int fd, char **statline, char **tmp, char buff[][BUFFER_SIZE + 1])
-{
-	*n = 1;
-	if (*statline == NULL)
-		*statline = ft_strnew(1 * sizeof(char));
-	if (!ft_strchr(*statline, '\n'))
-		*n = read(fd, *buff, BUFFER_SIZE);
-	while (!ft_strchr(*statline, '\n') && *n > 0)
-	{
-		buff[0][(*n)] = '\0';
-		*tmp = ft_strjoin(*statline, *buff);
+	if (n == 0)
 		ft_memdel((void **)statline);
-		*statline = *tmp;
-		if (!ft_strchr(*statline, '\n'))
-			*n = read(fd, *buff, BUFFER_SIZE);
-	}
+	return (ret);
 }
 
 int	get_next_line(int fd, char **line)
 {
+	ssize_t		ret;
 	ssize_t		n;
 	char		buff[BUFFER_SIZE + 1];
 	char		*tmp;
 	static char	*statline = NULL;
 
+	n = 1;
 	if (BUFFER_SIZE <= 0 || !line || fd < 0)
 		return (-1);
-	init(&n, fd, &statline, &tmp, &buff);
-	// n = 1;
-	// if (BUFFER_SIZE <= 0 || !line || fd < 0)
-	// 	return (-1);
-	// if (statline == NULL)
-	// 	statline = ft_strnew(1 * sizeof(char));
-	// if (!ft_strchr(statline, '\n'))
-	// 	n = read(fd, buff, BUFFER_SIZE);
-	// while (!ft_strchr(statline, '\n') && n > 0)
-	// {
-	// 	buff[n] = '\0';
-	// 	tmp = ft_strjoin(statline, buff);
-	// 	ft_memdel((void **)&statline);
-	// 	statline = tmp;
-	// 	if (!ft_strchr(statline, '\n'))
-	// 		n = read(fd, buff, BUFFER_SIZE);
-	// }
-	if (n < 0)
-		return (-1);
-	get_next_line_2(n, line, (char **)&statline, &tmp);
-	if (n == 0)
-		return (ft_memdel((void **)&statline) * 0);
-	else
-		return (1);
+	if (statline == NULL)
+		statline = ft_strnew(1 * sizeof(char));
+	if (!ft_strchr(statline, '\n'))
+		n = read(fd, buff, BUFFER_SIZE);
+	while (!ft_strchr(statline, '\n') && n > 0)
+	{
+		buff[n] = '\0';
+		tmp = ft_strjoin(statline, buff);
+		ft_memdel((void **)&statline);
+		statline = tmp;
+		if (!ft_strchr(statline, '\n'))
+			n = read(fd, buff, BUFFER_SIZE);
+	}
+	ret = get_next_line_2(n, line, (char **)&statline, &tmp);
+	return (ret);
 }
