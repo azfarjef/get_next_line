@@ -6,22 +6,11 @@
 /*   By: mahmad-j <mahmad-j@student.42kl.edu.my>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 15:26:08 by mahmad-j          #+#    #+#             */
-/*   Updated: 2021/06/02 15:23:58 by mahmad-j         ###   ########.fr       */
+/*   Updated: 2021/06/02 23:13:22 by mahmad-j         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-
-
-size_t	ft_strlen(const char *s)
-{
-	size_t	i;
-
-	i = 0;
-	while (s[i])
-		i++;
-	return (i);
-}
 
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
@@ -89,49 +78,39 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (ret);
 }
 
-char	*ft_strchr(const char *s, int c)
+void	get_next_line_2(ssize_t n, char **line, char **statline, char **tmp)
 {
-	while (*s != (char)c)
-		if (!*s++)
-			return (0);
-	return ((char *)s);
-}
-
-char	*ft_strnew(size_t size)
-{
-	void	*ptr;
-	
-	ptr = malloc(size);
-	if (ptr = NULL)
-		return (NULL);
-	ft_memset(ptr, 0, size);
-	return (ptr);
-}
-
-void	*ft_memset(void *b, int c, size_t len)
-{
-	unsigned char	*str;
-
-	str = (unsigned char *)b;
-	while (len > 0)
+	if (n == 0)
 	{
-		*str = (unsigned char)c;
-		str++;
-		len--;
+		*line = ft_strdup(*statline);
+		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
 	}
-	return (b);
+	else
+	{
+		*line = ft_substr(*statline, 0,
+				(ft_strchr(*statline, '\n') - *statline));
+		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
+	}
+	ft_memdel((void **)statline);
+	*statline = *tmp;
 }
 
-int	ft_memdel(void **ptr)
+void	init(ssize_t *n, int fd, char **statline, char **tmp, char buff[][BUFFER_SIZE + 1])
 {
-	if (*ptr)
+	*n = 1;
+	if (*statline == NULL)
+		*statline = ft_strnew(1 * sizeof(char));
+	if (!ft_strchr(*statline, '\n'))
+		*n = read(fd, *buff, BUFFER_SIZE);
+	while (!ft_strchr(*statline, '\n') && *n > 0)
 	{
-		ft_memset(*ptr, 0, ft_strlen(*ptr));
-		free(*ptr);
-		*ptr = NULL;
-		return (1);
+		buff[0][(*n)] = '\0';
+		*tmp = ft_strjoin(*statline, *buff);
+		ft_memdel((void **)statline);
+		*statline = *tmp;
+		if (!ft_strchr(*statline, '\n'))
+			*n = read(fd, *buff, BUFFER_SIZE);
 	}
-	return (0);
 }
 
 int	get_next_line(int fd, char **line)
@@ -139,43 +118,32 @@ int	get_next_line(int fd, char **line)
 	ssize_t		n;
 	char		buff[BUFFER_SIZE + 1];
 	char		*tmp;
-	static char	*statline;
-	
-	n = 1;
-	statline = NULL;
+	static char	*statline = NULL;
+
 	if (BUFFER_SIZE <= 0 || !line || fd < 0)
 		return (-1);
-	if (statline == NULL)
-		statline = ft_strnew(1 * sizeof(char));
-	if (!ft_strchr(statline, '\n'))
-		n = read(fd, buff, BUFFER_SIZE);
-	while (!ft_strchr(statline, '\n') && n > 0)
-	{
-		buff[n] = '\0';
-		tmp = ft_strjoin(statline, buff);
-		ft_memdel((void **)&statline);
-		statline = tmp;
-		if (!ft_strchr(statline, '\n'))
-			n = read(fd, buff, BUFFER_SIZE);
-	}
-	if (r == 0)
-	{
-		*line = ft_strdup(statline);
-		tmp = ft_strdup(statline + ft_strlen(*line));
-	}
-	else if (r > 0)
-	{
-		*line = ft_substr(statline, 0, (ft_strchr(statline, '\n') - statline));
-		tmp = ft_strdup(statline + ft_strlen(*line) + 1);
-	}
-	else
+	init(&n, fd, &statline, &tmp, &buff);
+	// n = 1;
+	// if (BUFFER_SIZE <= 0 || !line || fd < 0)
+	// 	return (-1);
+	// if (statline == NULL)
+	// 	statline = ft_strnew(1 * sizeof(char));
+	// if (!ft_strchr(statline, '\n'))
+	// 	n = read(fd, buff, BUFFER_SIZE);
+	// while (!ft_strchr(statline, '\n') && n > 0)
+	// {
+	// 	buff[n] = '\0';
+	// 	tmp = ft_strjoin(statline, buff);
+	// 	ft_memdel((void **)&statline);
+	// 	statline = tmp;
+	// 	if (!ft_strchr(statline, '\n'))
+	// 		n = read(fd, buff, BUFFER_SIZE);
+	// }
+	if (n < 0)
 		return (-1);
-	ft_memdel((void **)&statline);
-	statline = tmp;
-	if (r == 0)
-	{
-		
-	}
-	
-
+	get_next_line_2(n, line, (char **)&statline, &tmp);
+	if (n == 0)
+		return (ft_memdel((void **)&statline) * 0);
+	else
+		return (1);
 }
