@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mahmad-j <mahmad-j@student.42kl.edu.my>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 15:26:08 by mahmad-j          #+#    #+#             */
-/*   Updated: 2021/06/04 23:27:06 by mahmad-j         ###   ########.fr       */
+/*   Updated: 2021/06/04 23:55:08 by mahmad-j         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
@@ -78,32 +78,32 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (ret);
 }
 
-ssize_t	get_next_line_2(ssize_t n, char **line, char **statline, char **tmp)
+ssize_t	get_next_line_2(ssize_t n, char **line, char **linearr, char **tmp)
 {
 	ssize_t	ret;
 
 	if (n == 0)
 	{
-		*line = ft_strdup(*statline);
-		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
+		*line = ft_strdup(*linearr);
+		*tmp = ft_strdup(*linearr + ft_strlen(*line) + 1);
 		ret = 0;
 	}
 	else if (n > 0)
 	{
-		*line = ft_substr(*statline, 0,
-				(ft_strchr(*statline, '\n') - *statline));
-		*tmp = ft_strdup(*statline + ft_strlen(*line) + 1);
+		*line = ft_substr(*linearr, 0,
+				(ft_strchr(*linearr, '\n') - *linearr));
+		*tmp = ft_strdup(*linearr + ft_strlen(*line) + 1);
 		ret = 1;
 	}
 	else
 	{
-		ft_memdel((void **)statline);
+		ft_memdel((void **)linearr);
 		return (ret = -1);
 	}
-	ft_memdel((void **)statline);
-	*statline = *tmp;
+	ft_memdel((void **)linearr);
+	*linearr = *tmp;
 	if (n == 0)
-		ft_memdel((void **)statline);
+		ft_memdel((void **)linearr);
 	return (ret);
 }
 
@@ -113,24 +113,24 @@ int	get_next_line(int fd, char **line)
 	ssize_t		n;
 	char		buff[BUFFER_SIZE + 1];
 	char		*tmp;
-	static char	*statline = NULL;
+	static char	*linearr[FD_SIZE];
 
 	n = 1;
 	if (BUFFER_SIZE <= 0 || !line || fd < 0)
 		return (-1);
-	if (statline == NULL)
-		statline = ft_strnew(1 * sizeof(char));
-	if (!ft_strchr(statline, '\n'))
+	if (linearr[fd] == NULL)
+		linearr[fd] = ft_strnew(1 * sizeof(char));
+	if (!ft_strchr(linearr[fd], '\n'))
 		n = read(fd, buff, BUFFER_SIZE);
-	while (!ft_strchr(statline, '\n') && n > 0)
+	while (!ft_strchr(linearr[fd], '\n') && n > 0)
 	{
 		buff[n] = '\0';
-		tmp = ft_strjoin(statline, buff);
-		ft_memdel((void **)&statline);
-		statline = tmp;
-		if (!ft_strchr(statline, '\n'))
+		tmp = ft_strjoin(linearr[fd], buff);
+		ft_memdel((void **)&linearr[fd]);
+		linearr[fd] = tmp;
+		if (!ft_strchr(linearr[fd], '\n'))
 			n = read(fd, buff, BUFFER_SIZE);
 	}
-	ret = get_next_line_2(n, line, (char **)&statline, &tmp);
+	ret = get_next_line_2(n, line, (char **)&linearr[fd], &tmp);
 	return (ret);
 }
