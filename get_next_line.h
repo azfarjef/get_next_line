@@ -6,7 +6,7 @@
 /*   By: mahmad-j <mahmad-j@student.42kl.edu.my>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 15:26:14 by mahmad-j          #+#    #+#             */
-/*   Updated: 2021/06/02 23:56:25 by mahmad-j         ###   ########.fr       */
+/*   Updated: 2021/10/18 21:46:31 by mahmad-j         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ char	*ft_strchr(const char *s, int c);
 char	*ft_strnew(size_t size);
 void	*ft_memset(void *b, int c, size_t len);
 int		ft_memdel(void **ptr);
-ssize_t	get_next_line_2(ssize_t n, char **line, char **statline, char **tmp);
-int		get_next_line(int fd, char **line);
+char	*get_next_line_2(ssize_t n, char **statline, char **tmp);
+char	*get_next_line(int fd);
 
 #endif

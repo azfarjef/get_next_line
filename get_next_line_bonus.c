@@ -6,7 +6,7 @@
 /*   By: mahmad-j <mahmad-j@student.42kl.edu.my>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/29 15:26:08 by mahmad-j          #+#    #+#             */
-/*   Updated: 2021/06/04 23:55:08 by mahmad-j         ###   ########.fr       */
+/*   Updated: 2021/10/20 17:52:12 by mahmad-j         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,59 +78,52 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (ret);
 }
 
-ssize_t	get_next_line_2(ssize_t n, char **line, char **linearr, char **tmp)
+char	*get_next_line_2(ssize_t n, char **line_arr, char **tmp)
 {
-	ssize_t	ret;
+	char	*line;
 
+	line = NULL;
 	if (n == 0)
-	{
-		*line = ft_strdup(*linearr);
-		*tmp = ft_strdup(*linearr + ft_strlen(*line) + 1);
-		ret = 0;
-	}
-	else if (n > 0)
-	{
-		*line = ft_substr(*linearr, 0,
-				(ft_strchr(*linearr, '\n') - *linearr));
-		*tmp = ft_strdup(*linearr + ft_strlen(*line) + 1);
-		ret = 1;
-	}
-	else
-	{
-		ft_memdel((void **)linearr);
-		return (ret = -1);
-	}
-	ft_memdel((void **)linearr);
-	*linearr = *tmp;
-	if (n == 0)
-		ft_memdel((void **)linearr);
-	return (ret);
+		line = ft_strdup(*line_arr);
+	if (n > 0)
+		line = ft_substr(*line_arr, 0,
+				(ft_strchr(*line_arr, '\n') - *line_arr + 1));
+	*tmp = ft_strdup(*line_arr + ft_strlen(line));
+	ft_memdel((void **)line_arr);
+	*line_arr = *tmp;
+	if (n < 0 || (*line == 0 && n == 0))
+		ft_memdel((void **)&line);
+	*tmp = ft_strdup("");
+	ft_memdel((void **)tmp);
+	if (n <= 0)
+		ft_memdel((void **)line_arr);
+	return (line);
 }
 
-int	get_next_line(int fd, char **line)
+char	*get_next_line(int fd)
 {
-	ssize_t		ret;
 	ssize_t		n;
 	char		buff[BUFFER_SIZE + 1];
 	char		*tmp;
-	static char	*linearr[FD_SIZE];
+	static char	*line_arr[FD_SIZE];
 
 	n = 1;
-	if (BUFFER_SIZE <= 0 || !line || fd < 0)
-		return (-1);
-	if (linearr[fd] == NULL)
-		linearr[fd] = ft_strnew(1 * sizeof(char));
-	if (!ft_strchr(linearr[fd], '\n'))
-		n = read(fd, buff, BUFFER_SIZE);
-	while (!ft_strchr(linearr[fd], '\n') && n > 0)
+	if (BUFFER_SIZE <= 0 || fd < 0)
+		return (NULL);
+	if (line_arr[fd] == NULL)
+		line_arr[fd] = ft_strnew(1 * sizeof(char));
+	while (!ft_strchr(line_arr[fd], '\n') && n > 0)
 	{
+		n = read(fd, buff, BUFFER_SIZE);
+		if (n < 0)
+		{
+			ft_memdel((void **)&line_arr[fd]);
+			return (NULL);
+		}
 		buff[n] = '\0';
-		tmp = ft_strjoin(linearr[fd], buff);
-		ft_memdel((void **)&linearr[fd]);
-		linearr[fd] = tmp;
-		if (!ft_strchr(linearr[fd], '\n'))
-			n = read(fd, buff, BUFFER_SIZE);
+		tmp = ft_strjoin(line_arr[fd], buff);
+		ft_memdel((void **)&line_arr[fd]);
+		line_arr[fd] = tmp;
 	}
-	ret = get_next_line_2(n, line, (char **)&linearr[fd], &tmp);
-	return (ret);
+	return (get_next_line_2(n, (char **)&line_arr[fd], &tmp));
 }
